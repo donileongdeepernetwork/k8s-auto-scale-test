@@ -144,7 +144,7 @@
    make deploy
    ```
 
-   注意：这将自动创建 `k8s-auto-scale-test` namespace并在其中部署3个Pod副本，实现负载均衡。
+   注意：这将自动创建 `k8s-auto-scale-test` namespace并在其中部署3个Pod副本，实现负载均衡。每次Pod重启时都会拉取最新的镜像版本。
 
 2. **检查部署状态**:
    ```
@@ -176,6 +176,17 @@
    ```
 
    这将允许你在本地通过 `http://localhost:8080` 访问Kubernetes中的服务。
+
+8. **重启Deployment**:
+   ```
+   kubectl rollout restart deployment/k8s-auto-scale-test -n k8s-auto-scale-test
+   ```
+   或使用Makefile:
+   ```
+   make restart
+   ```
+
+   这将重启所有Pod，强制拉取最新镜像（由于imagePullPolicy: Always）。
 
 6. **查看Pod日志**:
    ```

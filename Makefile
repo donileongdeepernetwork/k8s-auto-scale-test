@@ -6,7 +6,7 @@ CPU_PERCENT ?= 20
 CLIENT_IP ?= 127.0.0.1
 
 .DEFAULT_GOAL := help
-.PHONY: build run test clean deploy undeploy status forward logs load-test help
+.PHONY: build run test clean deploy undeploy status forward logs load-test restart help
 
 # 构建Docker镜像
 build:
@@ -43,6 +43,13 @@ deploy:
 # 删除Kubernetes资源
 undeploy:
 	kubectl delete -k k8s/
+
+# 重启Kubernetes Deployment
+restart:
+	@echo "重启Deployment..."
+	kubectl rollout restart deployment/k8s-auto-scale-test -n $(NAMESPACE)
+	@echo "等待Pod重启..."
+	kubectl rollout status deployment/k8s-auto-scale-test -n $(NAMESPACE)
 
 # 查看Kubernetes资源状态
 status:
@@ -97,4 +104,5 @@ help:
 	@echo "  forward     - 将远程service端口转发到本地"
 	@echo "  logs        - 查看Kubernetes Pod日志"
 	@echo "  load-test   - 启动多个客户端进行负载测试 (NUM_CLIENTS=3, CPU_PERCENT=20, CLIENT_IP=127.0.0.1)"
+	@echo "  restart     - 重启Kubernetes Deployment"
 	@echo "  help        - 显示此帮助信息"
