@@ -3,6 +3,7 @@ CONTAINER_NAME = k8s-auto-scale-test-container
 NAMESPACE = k8s-auto-scale-test
 NUM_CLIENTS ?= 3
 CPU_PERCENT ?= 20
+CLIENT_IP ?= 127.0.0.1
 
 .DEFAULT_GOAL := help
 .PHONY: build run test clean deploy undeploy status forward logs load-test help
@@ -53,6 +54,8 @@ status:
 	kubectl get hpa -n $(NAMESPACE)
 	@echo "=== Deployments ==="
 	kubectl get deployments -n $(NAMESPACE)
+	@echo "=== Top ==="
+	kubectl top pods -n $(NAMESPACE)
 
 # 端口转发到本地
 forward:
@@ -66,12 +69,18 @@ logs:
 
 # 启动多个客户端进行负载测试
 load-test:
-	@echo "启动 $(NUM_CLIENTS) 个客户端，每个使用 $(CPU_PERCENT)% CPU..."
+	@echo "=== 负载测试配置 ==="
+	@echo "可配置参数 (使用 make load-test PARAM=value 进行修改):"
+	@echo "  NUM_CLIENTS: 客户端数量 (当前: $(NUM_CLIENTS))"
+	@echo "  CPU_PERCENT: 每个客户端的CPU使用百分比 (当前: $(CPU_PERCENT))"
+	@echo "  CLIENT_IP: 服务器IP地址 (当前: $(CLIENT_IP))"
+	@echo ""
+	@echo "启动 $(NUM_CLIENTS) 个客户端，连接到 $(CLIENT_IP):8080，每个使用 $(CPU_PERCENT)% CPU..."
 	@echo "按 Ctrl+C 停止所有客户端"
 	@trap 'echo ""; echo "停止所有客户端..."; pkill -f "go run cmd/client"; exit' INT; \
 	for i in $$(seq 1 $(NUM_CLIENTS)); do \
 		echo "启动客户端 $$i..."; \
-		go run cmd/client/main.go -ip 127.0.0.1 -port 8080 -cpu $(CPU_PERCENT) & \
+		go run cmd/client/main.go -ip $(CLIENT_IP) -port 8080 -cpu $(CPU_PERCENT) & \
 	done; \
 	wait
 
@@ -87,5 +96,5 @@ help:
 	@echo "  status      - 查看Kubernetes资源状态"
 	@echo "  forward     - 将远程service端口转发到本地"
 	@echo "  logs        - 查看Kubernetes Pod日志"
-	@echo "  load-test   - 启动多个客户端进行负载测试 (NUM_CLIENTS=3, CPU_PERCENT=20)"
+	@echo "  load-test   - 启动多个客户端进行负载测试 (NUM_CLIENTS=3, CPU_PERCENT=20, CLIENT_IP=127.0.0.1)"
 	@echo "  help        - 显示此帮助信息"

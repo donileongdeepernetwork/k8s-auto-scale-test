@@ -41,6 +41,13 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	// 获取Pod名称
+	podName := os.Getenv("HOSTNAME")
+	if podName == "" {
+		podName = "unknown"
+	}
+	log.Printf("Pod名称: %s\n", podName)
+
 	atomic.AddInt64(&connectionCount, 1)
 	defer func() {
 		atomic.AddInt64(&connectionCount, -1)
@@ -80,8 +87,8 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	for range ticker.C {
 		elapsed := time.Since(startTime)
-		status := fmt.Sprintf("运行时间: %v, 连接数: %d, CPU使用量: %dm",
-			elapsed, atomic.LoadInt64(&connectionCount), atomic.LoadInt64(&totalCPUUsage))
+		status := fmt.Sprintf("Pod: %s, 运行时间: %v, 连接数: %d, CPU使用量: %dm",
+			podName, elapsed, atomic.LoadInt64(&connectionCount), atomic.LoadInt64(&totalCPUUsage))
 		err := conn.WriteMessage(websocket.TextMessage, []byte(status))
 		if err != nil {
 			log.Println("发送消息失败:", err)
