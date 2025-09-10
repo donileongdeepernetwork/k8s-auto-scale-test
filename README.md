@@ -37,6 +37,10 @@
    ```
    go run cmd/server/main.go
    ```
+   或设置监听地址：
+   ```
+   LISTEN_ADDR=0.0.0.0:9090 go run cmd/server/main.go
+   ```
 
 2. **启动客户端**:
    ```

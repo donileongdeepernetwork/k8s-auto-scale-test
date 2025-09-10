@@ -17,6 +17,7 @@ spec:
       containers:
       - name: server
         image: k8s-auto-scale-test
+        command: ["/app/server"]
         ports:
         - containerPort: 8080
         resources:

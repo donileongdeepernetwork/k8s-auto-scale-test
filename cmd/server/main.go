@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -24,8 +25,12 @@ var totalCPUUsage int64 // 以m为单位
 func main() {
 	http.HandleFunc("/ws", handleConnections)
 	http.HandleFunc("/", handleRoot)
-	fmt.Println("服务器启动，监听端口 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	listenAddr := os.Getenv("LISTEN_ADDR")
+	if listenAddr == "" {
+		listenAddr = "0.0.0.0:8080"
+	}
+	fmt.Printf("服务器启动，监听 %s\n", listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
