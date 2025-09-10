@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+
+images:
+  - name: k8s-auto-scale-test
+    newName: ghcr.io/donileongdeepernetwork/k8s-auto-scale-test
+    newTag: latest
+
+namespace: k8s-auto-scale-test

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-auto-scale-test-service
+  labels:
+    app: k8s-auto-scale-test
+spec:
+  selector:
+    app: k8s-auto-scale-test
+  ports:
+  - name: websocket
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP

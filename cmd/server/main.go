@@ -23,6 +23,7 @@ var totalCPUUsage int64 // 以m为单位
 
 func main() {
 	http.HandleFunc("/ws", handleConnections)
+	http.HandleFunc("/", handleRoot)
 	fmt.Println("服务器启动，监听端口 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -105,4 +106,9 @@ func consumeCPU(ctx context.Context, percent float64) {
 			time.Sleep(idleTime)
 		}
 	}
+}
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "OK")
 }

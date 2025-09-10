@@ -90,7 +90,25 @@
 
    容器启动后，会自动启动服务器并连接一个客户端（使用50% CPU）。
 
-3. **从GitHub Container Registry拉取镜像**:
+3. **使用Makefile**:
+   ```
+   # 构建镜像
+   make build
+
+   # 运行容器
+   make run
+
+   # 测试容器（自动检查端口和日志）
+   make test
+
+   # 清理容器和镜像
+   make clean
+
+   # 显示帮助
+   make help
+   ```
+
+4. **从GitHub Container Registry拉取镜像**:
    ```
    docker pull ghcr.io/donileongdeepernetwork/k8s-auto-scale-test:latest
    docker run -p 8080:8080 ghcr.io/donileongdeepernetwork/k8s-auto-scale-test:latest
@@ -100,6 +118,109 @@
    ```
    echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
    ```
+
+## Kubernetes部署
+
+项目包含Kustomization配置用于在Kubernetes中部署自动扩展的服务端。
+
+### 前提条件
+
+- Kubernetes集群（1.19+）
+- Metrics Server已安装（用于HPA）
+- kubectl已配置
+
+### 部署步骤
+
+1. **应用Kustomization配置**:
+   ```
+   kubectl apply -k k8s/
+   ```
+   或使用Makefile:
+   ```
+   make deploy
+   ```
+
+   注意：这将自动创建 `k8s-auto-scale-test` namespace并在其中部署所有资源。
+
+2. **检查部署状态**:
+   ```
+   kubectl get pods -n k8s-auto-scale-test -l app=k8s-auto-scale-test
+   kubectl get hpa -n k8s-auto-scale-test k8s-auto-scale-test-hpa
+   ```
+   或使用Makefile:
+   ```
+   make status
+   ```
+
+3. **查看服务**:
+   ```
+   kubectl get svc -n k8s-auto-scale-test k8s-auto-scale-test-service
+   ```
+
+4. **监控自动扩展**:
+   ```
+   kubectl get hpa -n k8s-auto-scale-test k8s-auto-scale-test-hpa -w
+   ```
+
+5. **端口转发到本地**:
+   ```
+   kubectl port-forward -n k8s-auto-scale-test svc/k8s-auto-scale-test-service 8080:8080
+   ```
+   或使用Makefile:
+   ```
+   make forward
+   ```
+
+   这将允许你在本地通过 `http://localhost:8080` 访问Kubernetes中的服务。
+
+6. **查看Pod日志**:
+   ```
+   kubectl logs -n k8s-auto-scale-test -l app=k8s-auto-scale-test --tail=50 -f
+   ```
+   或使用Makefile:
+   ```
+   make logs
+   ```
+
+   这将显示Pod的实时日志输出。
+
+7. **启动负载测试客户端**:
+   ```
+   make load-test NUM_CLIENTS=5 CPU_PERCENT=30
+   ```
+   或使用默认值:
+   ```
+   make load-test
+   ```
+
+   这将启动多个客户端连接到本地8080端口进行负载测试。默认启动3个客户端，每个使用20% CPU。测试将在前台运行，按 Ctrl+C 可以同时停止所有客户端。
+
+### 使用方法
+
+### HPA配置说明
+
+- **目标CPU利用率**: 50%
+- **最小副本数**: 1
+- **最大副本数**: 10
+- **扩展行为**:
+  - 扩容：CPU > 50% 时，每60秒最多增加100%的副本
+  - 缩容：CPU < 50% 时，每60秒最多减少50%的副本，稳定窗口300秒
+
+### 自定义配置
+
+- 修改 `k8s/kustomization.yaml` 中的镜像标签
+- 调整 `k8s/hpa.yaml` 中的扩展参数
+- 修改 `k8s/deployment.yaml` 中的资源限制
+
+### 清理
+
+```
+kubectl delete -k k8s/
+```
+或使用Makefile:
+```
+make undeploy
+```
 
 ## 注意事项
 
